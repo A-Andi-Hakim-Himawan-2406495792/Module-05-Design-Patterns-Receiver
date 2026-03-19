@@ -20,3 +20,11 @@ pub fn unsubscribe(product_type: String, subscriber: Json<SubscriberRequest>)
     NotificationService::unsubscribe(product_type, subscriber.clone().into_inner());
     status::Custom(Status::Ok, subscriber)
 }
+
+#[post("/receive", data = "<notification>")]
+pub fn receive(notification: Json<Notification>)
+    -> status::Custom<Json<Notification>>
+{
+    let result = NotificationService::receive_notification(notification.into_inner());
+    status::Custom(Status::Ok, Json(result))
+}

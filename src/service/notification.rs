@@ -45,4 +45,8 @@ impl NotificationService {
                 rt.block_on(Self::unsubscribe_request(product_type_clone, subscriber_clone));
             });
         }
+
+        pub fn receive_notification(notification: Notification) -> Notification {
+            NotificationRepository::add(notification)
+        }
 }
