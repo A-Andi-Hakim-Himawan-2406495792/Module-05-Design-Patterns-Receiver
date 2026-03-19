@@ -49,4 +49,8 @@ impl NotificationService {
         pub fn receive_notification(notification: Notification) -> Notification {
             NotificationRepository::add(notification)
         }
+
+        pub fn list_messages() -> Vec<String> {
+                NotificationRepository::list_all_as_string()
+            }
 }

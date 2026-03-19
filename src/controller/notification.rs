@@ -28,3 +28,9 @@ pub fn receive(notification: Json<Notification>)
     let result = NotificationService::receive_notification(notification.into_inner());
     status::Custom(Status::Ok, Json(result))
 }
+
+#[get("/list")]
+pub fn list() -> status::Custom<Json<Vec<String>>> {
+    let result = NotificationService::list_messages();
+    status::Custom(Status::Ok, Json(result))
+}
