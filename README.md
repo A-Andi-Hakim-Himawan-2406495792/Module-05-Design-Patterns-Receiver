@@ -85,5 +85,18 @@ This is the place for you to write reflections:
 ### Mandatory (Subscriber) Reflections
 
 #### Reflection Subscriber-1
+Pertanyaan 1
+
+Why is RwLock necessary, and why don't we use Mutex instead?
+
+Dalam tutorial ini, saya menggunakan RwLock<Vec<Notification>> untuk mensinkronisasi akses ke list notifikasi. RwLock diperlukan karena aplikasi receiver ini berjalan dengan banyak thread secara bersamaan, ada thread yang menerima notifikasi baru (write) dan ada thread yang membaca list notifikasi untuk ditampilkan (read). Tanpa mekanisme sinkronisasi, dua thread yang mengakses Vec yang sama secara bersamaan bisa menyebabkan data race yang membuat program crash atau menghasilkan data yang korup.
+Alasan saya tidak menggunakan Mutex adalah karena pola akses di aplikasi ini lebih banyak read daripada write. Mutex hanya mengizinkan satu thread mengakses data pada satu waktu, baik itu read maupun write. Artinya kalau ada 10 thread yang ingin membaca list notifikasi secara bersamaan, mereka tetap harus antri satu per satu meskipun operasi read itu sebenarnya aman dilakukan secara paralel. RwLock lebih cocok karena ia mengizinkan banyak thread membaca secara bersamaan (multiple readers), dan hanya memblokir semua akses ketika ada operasi write. Ini jauh lebih efisien untuk kasus kita di mana operasi read (menampilkan notifikasi) jauh lebih sering terjadi dibanding operasi write (menerima notifikasi baru).
+
+Pertanyaan 2
+
+Why doesn't Rust allow mutating static variables directly like Java?
+
+Di Java, kita bisa dengan mudah mengubah isi static variable lewat static method karena Java menggunakan garbage collector dan memory management yang lebih longgar. Rust tidak mengizinkan hal ini karena Rust menganut prinsip ownership dan borrowing yang ketat untuk menjamin memory safety tanpa garbage collector. Static variable di Rust hidup sepanjang program berjalan dan bisa diakses dari banyak thread sekaligus, sehingga kalau Rust mengizinkan mutasi langsung tanpa mekanisme sinkronisasi, ini akan membuka celah data race yang sangat berbahaya.
+Inilah mengapa kita menggunakan lazy_static, library ini memungkinkan kita mendefinisikan static variable yang diinisialisasi saat pertama kali diakses (lazy initialization), bukan saat compile time. Dengan membungkus Vec di dalam RwLock, kita memberitahu Rust bahwa kita sadar ada potensi concurrent access dan kita sudah menyediakan mekanisme sinkronisasinya. Rust kemudian percaya pada kita dan mengizinkan mutasi tersebut. Ini adalah trade-off yang disengaja oleh Rust: sedikit lebih verbose, tapi jauh lebih aman karena programmer dipaksa untuk berpikir tentang thread-safety sejak awal.
 
 #### Reflection Subscriber-2
