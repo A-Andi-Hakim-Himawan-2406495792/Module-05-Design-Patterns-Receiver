@@ -100,3 +100,21 @@ Di Java, kita bisa dengan mudah mengubah isi static variable lewat static method
 Inilah mengapa kita menggunakan lazy_static, library ini memungkinkan kita mendefinisikan static variable yang diinisialisasi saat pertama kali diakses (lazy initialization), bukan saat compile time. Dengan membungkus Vec di dalam RwLock, kita memberitahu Rust bahwa kita sadar ada potensi concurrent access dan kita sudah menyediakan mekanisme sinkronisasinya. Rust kemudian percaya pada kita dan mengizinkan mutasi tersebut. Ini adalah trade-off yang disengaja oleh Rust: sedikit lebih verbose, tapi jauh lebih aman karena programmer dipaksa untuk berpikir tentang thread-safety sejak awal.
 
 #### Reflection Subscriber-2
+Pertanyaan 1
+
+Have you explored things outside of the steps in the tutorial, for example: src/lib.rs?
+
+Saya sempat membaca src/lib.rs untuk memahami bagaimana konfigurasi aplikasi receiver ini bekerja. Di sana saya menemukan definisi APP_CONFIG yang menggunakan lazy_static dan dotenvy untuk membaca environment variable dari file .env. Saya juga menemukan REQWEST_CLIENT yang merupakan HTTP client yang di-share across seluruh aplikasi, ini menarik karena dengan menjadikannya static, kita tidak perlu membuat client baru setiap kali ingin melakukan HTTP request, yang tentunya lebih efisien. Selain itu saya juga memahami bagaimana AppConfig menggunakan Figment untuk menggabungkan nilai default dengan environment variable, sehingga konfigurasi seperti port dan instance name bisa diubah tanpa mengubah kode.
+
+Pertanyaan 2
+
+How does Observer pattern ease you to plug in more subscribers? How about spawning more than one instance of Main app?
+
+Observer pattern sangat memudahkan penambahan subscriber baru. Untuk menambah subscriber, saya cukup menjalankan instance baru dari receiver app dengan port yang berbeda, lalu melakukan HTTP POST ke endpoint /subscribe dengan URL instance tersebut. Main app tidak perlu diubah sama sekali karena ia hanya menyimpan daftar URL subscriber dan mengirim notifikasi ke semua yang terdaftar, ia tidak peduli ada berapa subscriber atau siapa mereka. Ini adalah keunggulan utama Observer pattern, yaitu publisher dan subscriber benar-benar decoupled.
+Namun untuk spawning lebih dari satu instance Main app, situasinya berbeda. Karena SUBSCRIBERS disimpan sebagai in-memory static variable menggunakan DashMap, setiap instance Main app memiliki daftar subscriber-nya sendiri yang tidak dibagikan ke instance lain. Artinya kalau saya subscribe ke instance Main app pertama, instance kedua tidak akan tahu tentang subscriber tersebut dan tidak akan mengirim notifikasi. Untuk mengatasi ini, kita perlu external shared storage seperti database atau Redis agar semua instance Main app bisa berbagi daftar subscriber yang sama.
+
+Pertanyaan 3
+
+Have you tried to make your own Tests, or enhance documentation on your Postman collection?
+
+Saya mencoba menambahkan deskripsi pada setiap request di Postman collection agar lebih mudah dipahami saat digunakan kembali di masa mendatang. Fitur ini sangat berguna terutama untuk Group Project karena anggota tim lain bisa langsung memahami tujuan setiap endpoint tanpa harus membaca kode. Saya juga mencoba fitur environment variable di Postman untuk menyimpan base URL main app dan receiver app, sehingga kalau port berubah saya cukup mengubah di satu tempat saja tanpa harus mengedit satu per satu di setiap request. Ke depannya saya tertarik untuk mencoba fitur automated testing di Postman yang bisa memvalidasi response secara otomatis menggunakan JavaScript.
