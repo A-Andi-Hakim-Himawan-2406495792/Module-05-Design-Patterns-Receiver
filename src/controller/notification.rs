@@ -12,3 +12,11 @@ pub fn subscribe(product_type: String, subscriber: Json<SubscriberRequest>)
     NotificationService::subscribe(product_type, subscriber.clone().into_inner());
     status::Custom(Status::Ok, subscriber)
 }
+
+#[delete("/unsubscribe/<product_type>", data = "<subscriber>")]
+pub fn unsubscribe(product_type: String, subscriber: Json<SubscriberRequest>)
+    -> status::Custom<Json<SubscriberRequest>>
+{
+    NotificationService::unsubscribe(product_type, subscriber.clone().into_inner());
+    status::Custom(Status::Ok, subscriber)
+}
